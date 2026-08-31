@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import case, func, not_, or_, select
 from sqlalchemy.orm import Session
 
 import math
@@ -335,11 +335,17 @@ def search_cards(
         )
     if set_id:
         statement = statement.where(Card.set_id == set_id)
+    is_none_or_sealed = or_(
+        Card.rarity.is_(None),
+        Card.rarity == "",
+        Card.rarity == "None",
+        Card.rarity.ilike("none"),
+    )
     if sealed_only:
-        statement = statement.where(or_(Card.rarity.is_(None), Card.rarity == ""))
+        statement = statement.where(is_none_or_sealed)
     elif hide_sealed:
-        statement = statement.where(Card.rarity.is_not(None), Card.rarity != "")
-    is_sealed = case((or_(Card.rarity.is_(None), Card.rarity == ""), 0), else_=1)
+        statement = statement.where(not_(is_none_or_sealed))
+    is_sealed = case((is_none_or_sealed, 0), else_=1)
 
     if sort_by == "price_asc":
         order = (
