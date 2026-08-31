@@ -287,7 +287,9 @@ export function CatalogBrowser({
           </label>
 
           <div className="mt-5 block">
-            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Products</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+              {game === "pokemon-japan" ? "Rarity None" : "Products"}
+            </span>
             <button
               type="button"
               onClick={() => setHideSealed((prev) => !prev)}
@@ -299,8 +301,8 @@ export function CatalogBrowser({
               aria-pressed={!hideSealed}
             >
               <span className="flex items-center gap-2">
-                <span>📦</span>
-                <span>Sealed Products</span>
+                <span>{game === "pokemon-japan" ? "🏷️" : "📦"}</span>
+                <span>{game === "pokemon-japan" ? "None" : "Sealed Products"}</span>
               </span>
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
@@ -311,7 +313,9 @@ export function CatalogBrowser({
               </span>
             </button>
             <p className="mt-1.5 text-[11px] text-slate-400">
-              {hideSealed ? "Hiding boxes, packs & bundles." : "Showing cards and sealed products."}
+              {game === "pokemon-japan"
+                ? (hideSealed ? "Hiding items with rarity None." : "Showing items with rarity None.")
+                : (hideSealed ? "Hiding boxes, packs & bundles." : "Showing cards and sealed products.")}
             </p>
           </div>
 

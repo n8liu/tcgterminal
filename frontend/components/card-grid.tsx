@@ -110,7 +110,7 @@ export function CardGrid({ cards, query }: CardGridProps) {
           <div className="flex min-w-0 flex-1 flex-col px-1 pb-1 pt-4">
             <h2 className="line-clamp-2 text-sm font-bold leading-5 text-slate-950 sm:text-base">{card.name}</h2>
             <p className="mt-1 truncate text-xs text-slate-500 sm:text-sm">{card.set_name}</p>
-            <p className="mt-1 truncate text-xs text-slate-400">{card.rarity ?? "Unknown rarity"} · {numberLabel(card)}</p>
+            <p className="mt-1 truncate text-xs text-slate-400">{card.rarity || "None"} · {numberLabel(card)}</p>
 
             <div className="mt-auto flex items-end justify-between gap-3 pt-5">
               <div className="min-w-0">

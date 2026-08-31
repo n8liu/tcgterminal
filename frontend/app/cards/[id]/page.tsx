@@ -66,7 +66,7 @@ export default async function CardPage({ params }: CardPageProps) {
             <div className="grid grid-cols-2 gap-4 py-4">
               <dt className="text-sm text-zinc-500">Rarity</dt>
               <dd className="text-right text-sm font-medium text-zinc-950">
-                {card.rarity ?? "Unknown"}
+                {card.rarity || "None"}
               </dd>
             </div>
             <div className="grid grid-cols-2 gap-4 py-4">
