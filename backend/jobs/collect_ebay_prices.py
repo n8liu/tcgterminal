@@ -1,10 +1,17 @@
 import argparse
 import hashlib
 import logging
+from pathlib import Path
 import re
+import sys
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
+
+# Ensure backend root is in sys.path when executed as a direct script
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
 
 import httpx
 from celery import shared_task

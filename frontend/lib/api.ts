@@ -63,7 +63,7 @@ export function getCardSets(game?: GameLanguage): Promise<CardSetOption[]> {
   if (game && game !== "all") params.set("game", game);
   const qStr = params.toString();
   return request<CardSetOption[]>(`/cards/sets${qStr ? `?${qStr}` : ""}`, {
-    next: { revalidate: 86400 },
+    cache: "no-store",
   });
 }
 

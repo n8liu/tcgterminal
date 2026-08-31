@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CardGrid } from "@/components/card-grid";
 import { SearchForm } from "@/components/search-form";
-import { CARD_PAGE_SIZE, searchCards } from "@/lib/api";
+import { CARD_PAGE_SIZE, getCardSets, searchCards } from "@/lib/api";
 import type { CardSetOption, CardSort, CardSummary, GameLanguage } from "@/types/card";
 
 type CatalogBrowserProps = {
@@ -47,6 +47,7 @@ export function CatalogBrowser({
   const [hideSealed, setHideSealed] = useState(initialHideSealed);
   const [game, setGame] = useState<GameLanguage>("all");
   const [cards, setCards] = useState(initialCards);
+  const [setsList, setSetsList] = useState<CardSetOption[]>(sets);
   const [hasMore, setHasMore] = useState(initialCards.length === CARD_PAGE_SIZE);
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -82,6 +83,18 @@ export function CatalogBrowser({
       }
     }
   }, [getUrlParams, initialHideSealed, initialQuery, initialSetId, initialSortBy]);
+
+  useEffect(() => {
+    setSetsList(sets);
+  }, [sets]);
+
+  useEffect(() => {
+    void getCardSets().then((latestSets) => {
+      if (latestSets && latestSets.length > 0) {
+        setSetsList(latestSets);
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isInitialized.current) return;
@@ -167,13 +180,13 @@ export function CatalogBrowser({
     setSetId(newSetId);
   };
 
-  const filteredSets = sets.filter((s) => {
+  const filteredSets = setsList.filter((s) => {
     if (game === "pokemon-japan") return s.series === "Pokemon Japan";
     if (game === "pokemon") return s.series !== "Pokemon Japan";
     return true;
   });
 
-  const selectedSet = sets.find((cardSet) => cardSet.id === setId);
+  const selectedSet = setsList.find((cardSet) => cardSet.id === setId);
   const resultsTitle = query.trim()
     ? `Results for “${query.trim()}”`
     : selectedSet
