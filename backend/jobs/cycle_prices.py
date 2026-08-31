@@ -104,14 +104,17 @@ def cycle_prices() -> dict[str, Any]:
 
 
 def run_continuous_daemon(
-    interval_seconds: int = 60,
+    interval_seconds: int = 900,
     tcg_limit: int = 15,
     ebay_limit: int = 5,
+    alternate: bool = True,
 ) -> None:
     """Run continuous price cycling in a loop with sleep intervals."""
+    mode_desc = "alternating (TCG API -> eBay -> TCG API...)" if alternate else "combined (both per cycle)"
     logger.info(
-        "Starting continuous price cycling daemon interval=%ss tcg_limit=%s ebay_limit=%s",
+        "Starting continuous price cycling daemon interval=%ss mode=%s tcg_limit=%s ebay_limit=%s",
         interval_seconds,
+        mode_desc,
         tcg_limit,
         ebay_limit,
     )
@@ -120,11 +123,24 @@ def run_continuous_daemon(
         logger.info("--- Starting Price Cycle #%s ---", cycle_num)
         try:
             with SessionLocal() as session:
-                run_price_cycle(session, tcg_limit=tcg_limit, ebay_limit=ebay_limit)
+                if alternate:
+                    # Odd cycles: TCG API; Even cycles: eBay
+                    if cycle_num % 2 == 1:
+                        logger.info("Cycle #%s [TCG API Phase] updating up to %s cards...", cycle_num, tcg_limit)
+                        run_price_cycle(session, tcg_limit=tcg_limit, ebay_limit=0)
+                    else:
+                        logger.info("Cycle #%s [eBay Comps Phase] updating up to %s cards...", cycle_num, ebay_limit)
+                        run_price_cycle(session, tcg_limit=0, ebay_limit=ebay_limit)
+                else:
+                    run_price_cycle(session, tcg_limit=tcg_limit, ebay_limit=ebay_limit)
         except Exception as exc:
             logger.exception("Continuous cycle error=%s: %s", type(exc).__name__, exc)
         cycle_num += 1
-        logger.info("Cycle complete. Sleeping %ss before next cycle...", interval_seconds)
+        logger.info(
+            "Cycle complete. Sleeping %ss (%.1f mins) before next cycle...",
+            interval_seconds,
+            interval_seconds / 60,
+        )
         time.sleep(interval_seconds)
 
 
@@ -133,7 +149,9 @@ def main() -> None:
     parser.add_argument("--tcg-limit", type=int, default=15, help="Number of cards to update via TCG API")
     parser.add_argument("--ebay-limit", type=int, default=5, help="Number of cards to update via eBay")
     parser.add_argument("--continuous", action="store_true", help="Run continuously in a loop")
-    parser.add_argument("--interval", type=int, default=60, help="Interval in seconds between continuous cycles")
+    parser.add_argument("--interval", type=int, default=900, help="Interval in seconds between continuous cycles (default: 900 = 15 min)")
+    parser.add_argument("--alternate", action="store_true", default=True, help="Alternate between TCG API and eBay every interval (default: True)")
+    parser.add_argument("--no-alternate", dest="alternate", action="store_false", help="Run both TCG API and eBay simultaneously every interval")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -143,6 +161,7 @@ def main() -> None:
             interval_seconds=args.interval,
             tcg_limit=args.tcg_limit,
             ebay_limit=args.ebay_limit,
+            alternate=args.alternate,
         )
     else:
         with SessionLocal() as session:
