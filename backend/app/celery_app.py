@@ -22,9 +22,9 @@ celery_app.conf.update(
 )
 
 celery_app.conf.beat_schedule = {
-    "cycle-prices-continuous": {
+    "cycle-prices-every-30-mins": {
         "task": "jobs.cycle_prices.cycle_prices",
-        "schedule": crontab(minute="*/15"),
+        "schedule": crontab(minute="*/30"),
     },
     "sync-catalog-daily": {
         "task": "jobs.sync_catalog.sync_catalog",
